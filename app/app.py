@@ -21,7 +21,7 @@ def get_db_connection():
         dbname="predict_logs_db",
         user="postgres",
         password=os.getenv("PGPASSWORD"),
-        host="127.0.0.1",
+        host=os.getenv("DB_HOST", "127.0.0.1"),
         port=5432
     )
 
