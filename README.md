@@ -2,4 +2,4 @@
 * Выбранная модель: sklearn.linear_model, LogisticRegression (backlog: развернуть несколько моделей, в том числе LLM)
 * Модели храняться в формате .joblib
 * pydantic для автоматической валидации вводимых и выходных данных
-* postgressql - выбранная БД
+* postgresql - выбранная БД
