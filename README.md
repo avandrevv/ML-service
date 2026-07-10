@@ -78,7 +78,7 @@ graph LR
     B --> D["/predict"]
     B --> E["/logs"]
     D --> F[(PostgreSQL)]
-    E <-- F
+    E <--> F
     G[pytest] --> B
     H[GitHub Actions] --> G
     H --> I[Сборка Docker]
