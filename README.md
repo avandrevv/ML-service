@@ -81,6 +81,6 @@ graph LR
     E <-- F
     G[pytest] --> B
     H[GitHub Actions] --> G
-    H --> I[Сборка Docker(docker-compose)]
-    I --> J[Образ ml-service (fastapi-app + postgresql-bd)]
+    H --> I[Сборка Docker(docker compose)]
+    I --> J[Образ ml-service (fastapi app + postgresql bd)]
 ```
