@@ -78,9 +78,9 @@ graph LR
     B --> D["/predict"]
     B --> E["/logs"]
     D --> F[(PostgreSQL)]
-    E --> F
+    E <-- F
     G[pytest] --> B
     H[GitHub Actions] --> G
-    H --> I[Сборка Docker]
-    I --> J[Образ ml-service]
+    H --> I[Сборка Docker(docker-compose)]
+    I --> J[Образ ml-service (fastapi-app + postgresql-bd)]
 ```
