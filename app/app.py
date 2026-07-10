@@ -16,6 +16,7 @@ scaler = load('scaler.joblib')
 
 conn = None
 
+
 def get_db_connection():
     return psycopg2.connect(
         dbname="predict_logs_db",
@@ -24,6 +25,7 @@ def get_db_connection():
         host=os.getenv("DB_HOST", "127.0.0.1"),
         port=5432
     )
+
 
 @app.on_event("startup")
 def startup():
@@ -45,14 +47,17 @@ def startup():
     """)
     cur.close()
 
+
 @app.on_event("shutdown")
 def shutdown():
     if conn:
         conn.close()
 
+
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
 
 @app.post("/predict", response_model=PredictResponse)
 def predict(request: PredictRequest, req: Request):
@@ -67,7 +72,7 @@ def predict(request: PredictRequest, req: Request):
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO predict_logs (features, prediction, confidence, processing_time_ms, ip, user_agent)
+            INSERT INTO predict_logs (features, prediction, confidence, processing_time_ms, ip, user_agent) # noqa: E501
             VALUES (%s, %s, %s, %s, %s, %s)
             """,
             (Json(request.features), pred, conf, round(elapsed, 2),
@@ -75,7 +80,7 @@ def predict(request: PredictRequest, req: Request):
         )
         cur.close()
     except Exception as e:
-        print(f"Logging failed: {e}") 
+        print(f"Logging failed: {e}")
 
     return PredictResponse(
         prediction=pred,
@@ -83,12 +88,13 @@ def predict(request: PredictRequest, req: Request):
         processing_time_ms=round(elapsed, 2)
     )
 
+
 @app.get("/logs")
 def get_logs():
     try:
         cur = conn.cursor()
         cur.execute(
-            "SELECT id, timestamp, features, prediction, confidence, processing_time_ms, ip, user_agent "
+            "SELECT id, timestamp, features, prediction, confidence, processing_time_ms, ip, user_agent "   # noqa: E501
             "FROM predict_logs ORDER BY id DESC LIMIT 10"
         )
         rows = cur.fetchall()

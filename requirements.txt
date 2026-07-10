@@ -5,3 +5,5 @@ numpy
 psycopg2-binary
 python-dotenv
 scikit-learn
+pytest
+httpx2
