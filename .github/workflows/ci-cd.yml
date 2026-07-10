@@ -27,7 +27,7 @@ jobs:
         run: flake8 app/ --count --max-complexity=10 --statistics
       
       - name: Test with pytest
-        run: pytest tests/ -v
+        run: pytest my_tests/ -v
 
   build:
     needs: test
