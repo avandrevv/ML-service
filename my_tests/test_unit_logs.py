@@ -47,7 +47,20 @@ def test_db_integration():
     )
     conn.autocommit = True
     cur = conn.cursor()
-
+    
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS predict_logs (
+            id SERIAL PRIMARY KEY,
+            timestamp TIMESTAMP DEFAULT NOW(),
+            features JSONB,
+            prediction INTEGER,
+            confidence FLOAT,
+            processing_time_ms FLOAT,
+            ip VARCHAR(45),
+            user_agent TEXT
+        );
+    """)
+    
     cur.execute(
         "INSERT INTO predict_logs (features, prediction, confidence, processing_time_ms, ip, user_agent) "
         "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
