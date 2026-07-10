@@ -17,6 +17,16 @@ pip install -r requirements.txt
 python -m uvicorn app.app:app --reload
 ```
 
+
+## Запуск готового Docker-образа из реестра
+
+```bash
+docker pull ghcr.io/avandrevv/ml-service:latest
+docker run -p 8000:8000 ghcr.io/avandrevv/ml-service:latest
+```
+
+Для исправнной работы логирования требуется **запущенный PostgreSQL**. При запуске docker-compose это не требуется.
+
 ## Переменные окружения
 Необходим файл `.env` со следующим содержимым:
 ```env
