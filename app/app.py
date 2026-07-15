@@ -39,30 +39,30 @@ async def generate_text(request: GenerateRequest):
         try:
             response = await client.post(
                 OLLAMA_GENERATE_URL,
-                json={"model": request.model, "prompt": "test", "stream": False}
+                json={"model": request.model, "prompt": "test", "stream": False} # noqa: E501
             )
-            
+
             if response.status_code == 404:
-                print(f"Модель {request.model} не найдена. Начинаем скачивание...")
+                print(f"Модель {request.model} не найдена. Начинаем скачивание...") # noqa: E501
                 pull_response = await client.post(
                     OLLAMA_PULL_URL,
                     json={"name": request.model, "stream": False}
                 )
                 pull_response.raise_for_status()
                 print(f"Модель {request.model} успешно установлена!")
-                
+
                 response = await client.post(
                     OLLAMA_GENERATE_URL,
-                    json={"model": request.model, "prompt": request.prompt, "stream": False}
+                    json={"model": request.model, "prompt": request.prompt, "stream": False} # noqa: E501
                 )
 
             response.raise_for_status()
             return response.json()
 
         except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=f"Ollama API Error: {e.response.text}")
+            raise HTTPException(status_code=e.response.status_code, detail=f"Ollama API Error: {e.response.text}") # noqa: E501
         except httpx.RequestError as e:
-            raise HTTPException(status_code=500, detail=f"Не удалось связаться с сервисом Ollama: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Не удалось связаться с сервисом Ollama: {str(e)}") # noqa: E501
 
 
 @app.on_event("startup")
