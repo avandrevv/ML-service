@@ -7,3 +7,4 @@ python-dotenv
 scikit-learn
 pytest
 httpx2
+httpx

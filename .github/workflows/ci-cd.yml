@@ -70,6 +70,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile  # Путь к Dockerfile твоего FastAPI приложения
+          file: ./Dockerfile 
           push: true
           tags: ghcr.io/avandrevv/ml-service:latest
