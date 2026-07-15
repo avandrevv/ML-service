@@ -8,8 +8,10 @@ services:
       DB_USER: postgres
       PGPASSWORD: ${PGPASSWORD}
       DB_NAME: predict_logs_db
+      OLLAMA_HOST: ollama:11434
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env
 
@@ -25,6 +27,19 @@ services:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d predict_logs_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    ports:
+      - "11434:11434"
 
 volumes:
   postgres_data:
+  ollama_data:

@@ -1,0 +1,5 @@
+FROM ollama/ollama:rocm
+
+RUN ollama serve & \
+    sleep 5 && \
+    ollama pull tinyllama

@@ -9,3 +9,8 @@ class PredictResponse(BaseModel):
     prediction: int
     confidence: float
     processing_time_ms: float
+
+
+class GenerateRequest(BaseModel):
+    prompt: str
+    model: str = "tinyllama"

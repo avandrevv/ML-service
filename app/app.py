@@ -1,16 +1,22 @@
 import psycopg2
 from psycopg2.extras import Json
-from fastapi import FastAPI, Request
-from app.schemas import PredictRequest, PredictResponse
+from fastapi import FastAPI, Request, HTTPException
+from app.schemas import PredictRequest, PredictResponse, GenerateRequest
 import numpy as np
 import time
 from joblib import load
 import os
 from dotenv import load_dotenv
+import httpx2 as httpx
 
 load_dotenv()
 
 app = FastAPI()
+
+OLLAMA_HOST = os.getenv('OLLAMA_HOST', 'localhost:11434')
+OLLAMA_GENERATE_URL = f"http://{OLLAMA_HOST}/api/generate"
+OLLAMA_PULL_URL = f"http://{OLLAMA_HOST}/api/pull"
+
 model = load('model.joblib')
 scaler = load('scaler.joblib')
 
@@ -25,6 +31,38 @@ def get_db_connection():
         host=os.getenv("DB_HOST", "127.0.0.1"),
         port=5432
     )
+
+
+@app.post("/generate")
+async def generate_text(request: GenerateRequest):
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        try:
+            response = await client.post(
+                OLLAMA_GENERATE_URL,
+                json={"model": request.model, "prompt": "test", "stream": False}
+            )
+            
+            if response.status_code == 404:
+                print(f"Модель {request.model} не найдена. Начинаем скачивание...")
+                pull_response = await client.post(
+                    OLLAMA_PULL_URL,
+                    json={"name": request.model, "stream": False}
+                )
+                pull_response.raise_for_status()
+                print(f"Модель {request.model} успешно установлена!")
+                
+                response = await client.post(
+                    OLLAMA_GENERATE_URL,
+                    json={"model": request.model, "prompt": request.prompt, "stream": False}
+                )
+
+            response.raise_for_status()
+            return response.json()
+
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(status_code=e.response.status_code, detail=f"Ollama API Error: {e.response.text}")
+        except httpx.RequestError as e:
+            raise HTTPException(status_code=500, detail=f"Не удалось связаться с сервисом Ollama: {str(e)}")
 
 
 @app.on_event("startup")
