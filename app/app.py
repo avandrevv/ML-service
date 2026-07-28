@@ -23,7 +23,6 @@ scaler = load("scaler.joblib")
 
 
 def get_db_connection():
-    """Создает соединение с БД или возвращает None при ошибке подключения."""
     try:
         conn = psycopg2.connect(
             dbname=os.getenv("DB_NAME", "predict_logs_db"),
@@ -64,7 +63,6 @@ def init_db():
             conn.close()
 
 
-# Инициализируем структуру таблицы при загрузке модуля
 init_db()
 
 
@@ -84,7 +82,6 @@ def predict(request: PredictRequest, req: Request):
 
     client_ip = req.client.host if req.client else "127.0.0.1"
 
-    # Безопасная запись в БД
     conn = get_db_connection()
     if conn:
         try:
