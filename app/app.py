@@ -110,7 +110,8 @@ def predict(request: PredictRequest, req: Request):
         cur = conn.cursor()
         cur.execute(
             """
-            INSERT INTO predict_logs (features, prediction, confidence, processing_time_ms, ip, user_agent) # noqa: E501
+            INSERT INTO predict_logs (features, prediction, confidence, 
+            processing_time_ms, ip, user_agent)
             VALUES (%s, %s, %s, %s, %s, %s)
             """,
             (Json(request.features), pred, conf, round(elapsed, 2),
