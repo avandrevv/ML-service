@@ -1,18 +1,22 @@
-import sys
 import os
-import psycopg2
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from pathlib import Path
+import sys
 
 from fastapi.testclient import TestClient
-from app.app import app
+import psycopg2
 
-client = TestClient(app)
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from app.app import app  # noqa: E402
+
+client = TestClient(app, raise_server_exceptions=False)
+
 
 def test_health():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
+
 
 def test_predict_positive():
     payload = {"features": [5.1, 3.5, 1.4, 0.2]}
@@ -25,6 +29,7 @@ def test_predict_positive():
     assert isinstance(data["prediction"], int)
     assert 0 <= data["prediction"] <= 2
 
+
 def test_predict_negative():
     payload = {"features": [10.0, -5.0, 100.0, -10.0]}
     response = client.post("/predict", json=payload)
@@ -32,10 +37,12 @@ def test_predict_negative():
     data = response.json()
     assert "prediction" in data
 
+
 def test_predict_invalid():
     payload = {"features": [5.1, 3.5, 1.4]}
     response = client.post("/predict", json=payload)
     assert response.status_code == 422
+
 
 def test_db_integration():
     conn = psycopg2.connect(
@@ -47,7 +54,7 @@ def test_db_integration():
     )
     conn.autocommit = True
     cur = conn.cursor()
-    
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS predict_logs (
             id SERIAL PRIMARY KEY,
@@ -60,9 +67,10 @@ def test_db_integration():
             user_agent TEXT
         );
     """)
-    
+
     cur.execute(
-        "INSERT INTO predict_logs (features, prediction, confidence, processing_time_ms, ip, user_agent) "
+        "INSERT INTO predict_logs (features, prediction, confidence, "
+        "processing_time_ms, ip, user_agent) "
         "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
         ('[1.0, 2.0, 3.0, 4.0]', 1, 0.95, 1.23, '127.0.0.1', 'test')
     )
@@ -78,6 +86,7 @@ def test_db_integration():
     assert row is not None
     assert row[2] == [1.0, 2.0, 3.0, 4.0]
     assert row[3] == 1
+
 
 if __name__ == "__main__":
     test_health()
