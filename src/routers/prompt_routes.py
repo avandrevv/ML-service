@@ -7,7 +7,7 @@ from psycopg2.extras import Json
 import time
 import os
 
-
+from src.database import get_db_connection
 from src.schemas import GenerateRequest, PredictRequest, PredictResponse
 
 load_dotenv()
