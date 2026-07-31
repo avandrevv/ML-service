@@ -1,18 +1,18 @@
-import os
-import time
+from fastapi import APIRouter, HTTPException, Request
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Request
 import httpx
 from joblib import load
 import numpy as np
-import psycopg2
 from psycopg2.extras import Json
+import time
+import os
 
-from app.schemas import GenerateRequest, PredictRequest, PredictResponse
+
+from src.schemas import GenerateRequest, PredictRequest, PredictResponse
 
 load_dotenv()
 
-app = FastAPI()
+prompt_router = APIRouter()
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost:11434")
 OLLAMA_GENERATE_URL = f"http://{OLLAMA_HOST}/api/generate"
@@ -22,56 +22,7 @@ model = load("model.joblib")
 scaler = load("scaler.joblib")
 
 
-def get_db_connection():
-    try:
-        conn = psycopg2.connect(
-            dbname=os.getenv("DB_NAME", "predict_logs_db"),
-            user=os.getenv("DB_USER", "postgres"),
-            password=os.getenv("PGPASSWORD"),
-            host=os.getenv("DB_HOST", "127.0.0.1"),
-            port=os.getenv("DB_PORT", "5432"),
-            connect_timeout=3
-        )
-        conn.autocommit = True
-        return conn
-    except Exception as e:
-        print(f"DB Connection Error: {e}")
-        return None
-
-
-def init_db():
-    """Создает таблицу при первом запуске."""
-    conn = get_db_connection()
-    if conn:
-        try:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS predict_logs (
-                        id SERIAL PRIMARY KEY,
-                        timestamp TIMESTAMP DEFAULT NOW(),
-                        features JSONB,
-                        prediction INTEGER,
-                        confidence FLOAT,
-                        processing_time_ms FLOAT,
-                        ip VARCHAR(45),
-                        user_agent TEXT
-                    );
-                """)
-        except Exception as e:
-            print(f"Failed to create table: {e}")
-        finally:
-            conn.close()
-
-
-init_db()
-
-
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
-
-
-@app.post("/predict", response_model=PredictResponse)
+@prompt_router.post("/predict", response_model=PredictResponse)
 def predict(request: PredictRequest, req: Request):
     start = time.time()
     X = np.array(request.features).reshape(1, -1)
@@ -113,40 +64,7 @@ def predict(request: PredictRequest, req: Request):
     )
 
 
-@app.get("/logs")
-def get_logs():
-    conn = get_db_connection()
-    if not conn:
-        return {"error": "Database connection failed"}
-
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id, timestamp, features, prediction, confidence, "
-                "processing_time_ms, ip, user_agent "
-                "FROM predict_logs ORDER BY id DESC LIMIT 10"
-            )
-            rows = cur.fetchall()
-            return [
-                {
-                    "id": r[0],
-                    "timestamp": r[1].isoformat(),
-                    "features": r[2],
-                    "prediction": r[3],
-                    "confidence": r[4],
-                    "processing_time_ms": r[5],
-                    "ip": r[6],
-                    "user_agent": r[7]
-                }
-                for r in rows
-            ]
-    except Exception as e:
-        return {"error": str(e)}
-    finally:
-        conn.close()
-
-
-@app.post("/generate")
+@prompt_router.post("/generate")
 async def generate_text(request: GenerateRequest):
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
