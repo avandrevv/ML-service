@@ -52,6 +52,7 @@ def predict(request: PredictRequest, req: Request):
                         req.headers.get("user-agent", "unknown")
                     )
                 )
+                conn.commit()
         except Exception as e:
             print(f"Logging failed: {e}")
         finally:
@@ -65,7 +66,10 @@ def predict(request: PredictRequest, req: Request):
 
 
 @prompt_router.post("/generate")
-async def generate_text(request: GenerateRequest):
+async def generate_text(request: GenerateRequest, req: Request):
+    client_ip = req.client.host if req.client else "127.0.0.1"
+    user_agent = req.headers.get("user-agent", "unknown")
+    
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
             payload = {
@@ -73,6 +77,7 @@ async def generate_text(request: GenerateRequest):
                 "prompt": request.prompt,
                 "stream": False,
             }
+            
             response = await client.post(
                 OLLAMA_GENERATE_URL,
                 json=payload
@@ -91,6 +96,25 @@ async def generate_text(request: GenerateRequest):
                 )
 
             response.raise_for_status()
+            
+            # Сохраняем только промпт (ответ не сохраняем)
+            conn = get_db_connection()
+            if conn:
+                try:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            """
+                            INSERT INTO prompt_logs (model, prompt, ip, user_agent)
+                            VALUES (%s, %s, %s, %s)
+                            """,
+                            (request.model, request.prompt, client_ip, user_agent)
+                        )
+                        conn.commit()
+                except Exception as e:
+                    print(f"Prompt logging failed: {e}")
+                finally:
+                    conn.close()
+            
             return response.json()
 
         except httpx.HTTPStatusError as e:

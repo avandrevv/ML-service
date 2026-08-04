@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     build: .
@@ -13,7 +15,16 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - .env
+      - .env 
+    healthcheck:
+      test: ["CMD", "python", "my_tests/healthcheck.py"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - ./model.joblib:/app/model.joblib
+      - ./scaler.joblib:/app/scaler.joblib
 
   db:
     image: postgres:17
@@ -39,6 +50,22 @@ services:
       dockerfile: Dockerfile.ollama
     ports:
       - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  etl:
+    build:
+      context: ./etl
+      dockerfile: Dockerfile.etl
+    environment:
+      PGPASSWORD: ${PGPASSWORD}
+      ETL_INTERVAL: 30
+    depends_on:
+      app:
+        condition: service_healthy
+    env_file:
+      - .env
+    restart: unless-stopped
 
 volumes:
   postgres_data:
