@@ -85,4 +85,6 @@ jobs:
           context: .
           file: ./Dockerfile 
           push: true
-          tags: ghcr.io/avandrevv/ml-service:${{ steps.vars.outputs.sha_short }}
+          tags: |
+           ghcr.io/avandrevv/ml-service:${{ steps.vars.outputs.sha_short }}
+           ghcr.io/avandrevv/ml-service:v2.1
