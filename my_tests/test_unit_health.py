@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from app.app import app
+from src.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
 

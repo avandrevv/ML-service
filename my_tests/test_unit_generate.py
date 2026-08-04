@@ -7,12 +7,12 @@ from fastapi.testclient import TestClient
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from app.app import app
+from src.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
 
 
-@patch("app.app.httpx.AsyncClient.post")
+@patch("httpx.AsyncClient.post")
 def test_generate_positive(mock_post):
     async def mock_post_async(*args, **kwargs):
         fake_request = httpx.Request("POST", "http://ollama:11434/api/generate")
@@ -57,7 +57,7 @@ def test_generate_wrong_type():
     assert response.status_code == 422
 
 
-@patch("app.app.httpx.AsyncClient.post")
+@patch("httpx.AsyncClient.post")
 def test_generate_ollama_error(mock_post):
     async def mock_network_error(*args, **kwargs):
         raise httpx.ConnectError("Connection failed")
