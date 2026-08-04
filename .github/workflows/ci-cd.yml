@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ master ]
+    branches: [ v2 ]
   pull_request:
-    branches: [ master ]
+    branches: [ v2 ]
 
 jobs:
   test:
@@ -52,7 +52,7 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/v2'
     steps:
       - uses: actions/checkout@v3
       
@@ -65,6 +65,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+        
+      - name: Get short SHA
+        id: vars
+        run: echo "sha_short=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
       - name: Build and push ML Service Image
         uses: docker/build-push-action@v4
@@ -72,4 +76,4 @@ jobs:
           context: .
           file: ./Dockerfile 
           push: true
-          tags: ghcr.io/avandrevv/ml-service:latest
+          tags: ghcr.io/avandrevv/ml-service:${{ steps.vars.outputs.sha_short }}
