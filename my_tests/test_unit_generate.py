@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from app.app import app  # noqa: E402
+from app.app import app
 
 client = TestClient(app, raise_server_exceptions=False)
 
@@ -15,9 +15,7 @@ client = TestClient(app, raise_server_exceptions=False)
 @patch("app.app.httpx.AsyncClient.post")
 def test_generate_positive(mock_post):
     async def mock_post_async(*args, **kwargs):
-        fake_request = httpx.Request(
-            "POST", "http://ollama:11434/api/generate"
-        )
+        fake_request = httpx.Request("POST", "http://ollama:11434/api/generate")
         return httpx.Response(
             status_code=200,
             json={

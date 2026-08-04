@@ -34,11 +34,20 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-mock
+          pip install pytest pytest-mock ruff bandit
           pip install -r requirements.txt
       
-      - name: Lint with flake8
-        run: flake8 . --count --max-complexity=10 --statistics
+      - name: Lint with ruff
+        run: ruff check . --output-format=github
+      
+      - name: Security check with bandit
+        run: bandit -r src/ etl/ -x ./tests,./.venv -f json -o bandit-report.json || true
+      
+      - name: Upload bandit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bandit-report
+          path: bandit-report.json
       
       - name: Test with pytest
         env:

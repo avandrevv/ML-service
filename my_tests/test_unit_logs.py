@@ -1,13 +1,13 @@
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from fastapi.testclient import TestClient
 import psycopg2
+from fastapi.testclient import TestClient
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from app.app import app  # noqa: E402
+from app.app import app
 
 client = TestClient(app, raise_server_exceptions=False)
 
@@ -50,7 +50,7 @@ def test_db_integration():
         user="postgres",
         password=os.getenv("PGPASSWORD", "1234"),
         host=os.getenv("DB_HOST", "localhost"),
-        port=5432
+        port=5432,
     )
     conn.autocommit = True
     cur = conn.cursor()
@@ -72,7 +72,7 @@ def test_db_integration():
         "INSERT INTO predict_logs (features, prediction, confidence, "
         "processing_time_ms, ip, user_agent) "
         "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
-        ('[1.0, 2.0, 3.0, 4.0]', 1, 0.95, 1.23, '127.0.0.1', 'test')
+        ("[1.0, 2.0, 3.0, 4.0]", 1, 0.95, 1.23, "127.0.0.1", "test"),
     )
     new_id = cur.fetchone()[0]
     cur.close()

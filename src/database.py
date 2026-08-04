@@ -1,9 +1,10 @@
-import os
-import psycopg2
-from psycopg2.extras import Json
 import logging
+import os
+
+import psycopg2
 
 logger = logging.getLogger(__name__)
+
 
 def get_db_connection():
     try:
@@ -13,20 +14,21 @@ def get_db_connection():
             password=os.getenv("PGPASSWORD"),
             host=os.getenv("DB_HOST", "127.0.0.1"),
             port=os.getenv("DB_PORT", "5432"),
-            connect_timeout=3
+            connect_timeout=3,
         )
         conn.autocommit = True
         return conn
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"DB Connection Error: {e}")
         return None
+
 
 def init_db():
     conn = get_db_connection()
     if not conn:
         logger.error("Failed to connect to database for initialization")
         return
-    
+
     try:
         with conn.cursor() as cur:
             cur.execute("""
@@ -41,7 +43,7 @@ def init_db():
                     user_agent TEXT
                 )
             """)
-            
+
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS prompt_logs (
                     id SERIAL PRIMARY KEY,
@@ -52,22 +54,21 @@ def init_db():
                     user_agent TEXT
                 )
             """)
-            
+
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_prompt_logs_timestamp 
                 ON prompt_logs(timestamp DESC)
             """)
-            
+
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_predict_logs_timestamp 
                 ON predict_logs(timestamp DESC)
             """)
-            
+
             conn.commit()
             logger.info("Database initialized successfully")
-            
-    except Exception as e:
+
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Database initialization failed: {e}")
     finally:
         conn.close()
-        

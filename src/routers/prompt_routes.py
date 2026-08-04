@@ -1,11 +1,12 @@
-from fastapi import APIRouter, HTTPException, Request
-from dotenv import load_dotenv
-import httpx
-from joblib import load
-import numpy as np
-from psycopg2.extras import Json
-import time
 import os
+import time
+
+import httpx
+import numpy as np
+from dotenv import load_dotenv
+from fastapi import APIRouter, HTTPException, Request
+from joblib import load
+from psycopg2.extras import Json
 
 from src.database import get_db_connection
 from src.schemas import GenerateRequest, PredictRequest, PredictResponse
@@ -49,19 +50,17 @@ def predict(request: PredictRequest, req: Request):
                         conf,
                         round(elapsed, 2),
                         client_ip,
-                        req.headers.get("user-agent", "unknown")
-                    )
+                        req.headers.get("user-agent", "unknown"),
+                    ),
                 )
                 conn.commit()
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Logging failed: {e}")
         finally:
             conn.close()
 
     return PredictResponse(
-        prediction=pred,
-        confidence=conf,
-        processing_time_ms=round(elapsed, 2)
+        prediction=pred, confidence=conf, processing_time_ms=round(elapsed, 2)
     )
 
 
@@ -69,7 +68,7 @@ def predict(request: PredictRequest, req: Request):
 async def generate_text(request: GenerateRequest, req: Request):
     client_ip = req.client.host if req.client else "127.0.0.1"
     user_agent = req.headers.get("user-agent", "unknown")
-    
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
             payload = {
@@ -77,26 +76,19 @@ async def generate_text(request: GenerateRequest, req: Request):
                 "prompt": request.prompt,
                 "stream": False,
             }
-            
-            response = await client.post(
-                OLLAMA_GENERATE_URL,
-                json=payload
-            )
+
+            response = await client.post(OLLAMA_GENERATE_URL, json=payload)
 
             if response.status_code == 404:
                 pull_response = await client.post(
-                    OLLAMA_PULL_URL,
-                    json={"name": request.model, "stream": False}
+                    OLLAMA_PULL_URL, json={"name": request.model, "stream": False}
                 )
                 pull_response.raise_for_status()
 
-                response = await client.post(
-                    OLLAMA_GENERATE_URL,
-                    json=payload
-                )
+                response = await client.post(OLLAMA_GENERATE_URL, json=payload)
 
             response.raise_for_status()
-            
+
             # Сохраняем только промпт (ответ не сохраняем)
             conn = get_db_connection()
             if conn:
@@ -107,23 +99,22 @@ async def generate_text(request: GenerateRequest, req: Request):
                             INSERT INTO prompt_logs (model, prompt, ip, user_agent)
                             VALUES (%s, %s, %s, %s)
                             """,
-                            (request.model, request.prompt, client_ip, user_agent)
+                            (request.model, request.prompt, client_ip, user_agent),
                         )
                         conn.commit()
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     print(f"Prompt logging failed: {e}")
                 finally:
                     conn.close()
-            
+
             return response.json()
 
         except httpx.HTTPStatusError as e:
             raise HTTPException(
                 status_code=e.response.status_code,
-                detail=f"Ollama API Error: {e.response.text}"
+                detail=f"Ollama API Error: {e.response.text}",
             )
         except httpx.RequestError as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"Не удалось связаться с сервисом Ollama: {str(e)}"
+                status_code=500, detail=f"Не удалось связаться с сервисом Ollama: {e!s}"
             )

@@ -4,6 +4,7 @@ from src.database import get_db_connection
 
 db_router = APIRouter()
 
+
 @db_router.get("/logs")
 def get_logs():
     conn = get_db_connection()
@@ -27,14 +28,15 @@ def get_logs():
                     "confidence": r[4],
                     "processing_time_ms": r[5],
                     "ip": r[6],
-                    "user_agent": r[7]
+                    "user_agent": r[7],
                 }
                 for r in rows
             ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return {"error": str(e)}
     finally:
         conn.close()
+
 
 @db_router.get("/prompts")
 def get_prompts():
@@ -60,15 +62,16 @@ def get_prompts():
                     "model": r[2],
                     "prompt": r[3],
                     "ip": r[4],
-                    "user_agent": r[5]
+                    "user_agent": r[5],
                 }
                 for r in rows
             ]
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return {"error": str(e)}
     finally:
         conn.close()
-        
+
+
 @db_router.get("/stats")
 def get_stats():
     """
@@ -89,7 +92,7 @@ def get_stats():
                 FROM etl_daily_stats
             """)
             overall = cur.fetchone()
-            
+
             cur.execute("""
                 SELECT 
                     date,
@@ -102,7 +105,7 @@ def get_stats():
                 LIMIT 7
             """)
             last_7_days = cur.fetchall()
-            
+
             cur.execute("""
                 SELECT 
                     COUNT(*) as total_prompts,
@@ -111,7 +114,7 @@ def get_stats():
                 WHERE timestamp >= NOW() - INTERVAL '24 hours'
             """)
             prompts = cur.fetchone()
-            
+
             return {
                 "total_predictions": overall[1] or 0,
                 "avg_confidence": round(overall[2], 4) if overall[2] else 0,
@@ -122,14 +125,14 @@ def get_stats():
                         "predictions": r[1] or 0,
                         "confidence": round(r[2], 4) if r[2] else 0,
                         "avg_time_ms": round(r[3], 2) if r[3] else 0,
-                        "unique_ips": r[4] or 0
+                        "unique_ips": r[4] or 0,
                     }
                     for r in last_7_days
                 ],
                 "prompts_last_24h": prompts[0] or 0 if prompts else 0,
-                "unique_models_24h": prompts[1] or 0 if prompts else 0
+                "unique_models_24h": prompts[1] or 0 if prompts else 0,
             }
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return {"error": str(e)}
     finally:
         conn.close()

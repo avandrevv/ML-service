@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from app.app import app  # noqa: E402
+from app.app import app
 
 client = TestClient(app, raise_server_exceptions=False)
 
