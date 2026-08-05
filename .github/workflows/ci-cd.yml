@@ -52,14 +52,10 @@ jobs:
           path: bandit-report.json
 
       - name: Test with pytest
-        env:
-          DB_HOST: localhost
-          DB_USER: postgres
-          PGPASSWORD: 1234
-          DB_NAME: predict_logs_db
-          OLLAMA_HOST: localhost:11434
         run: |
-          cd ml-service && uv run pytest tests/ -v
+          cd ml-service && \
+          DB_HOST=localhost DB_USER=postgres PGPASSWORD=1234 DB_NAME=predict_logs_db OLLAMA_HOST=localhost:11434 \
+          uv run pytest tests/ -v
 
   build:
     needs: test
