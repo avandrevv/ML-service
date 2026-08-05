@@ -8,8 +8,8 @@ from fastapi import APIRouter, HTTPException, Request
 from joblib import load
 from psycopg2.extras import Json
 
-from src.database import get_db_connection
-from src.schemas import GenerateRequest, PredictRequest, PredictResponse
+from ml_service.database import get_db_connection
+from ml_service.schemas import GenerateRequest, PredictRequest, PredictResponse
 
 load_dotenv()
 

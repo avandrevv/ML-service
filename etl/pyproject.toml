@@ -1,0 +1,23 @@
+[project]
+name = "etl"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Andrew", email = "andrej.a.vanin@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy==1.26.4",
+    "pandas==2.0.3",
+    "psycopg2-binary==2.9.9",
+    "python-dotenv==1.0.0",
+    "sqlalchemy==2.0.21",
+]
+
+[project.scripts]
+etl = "etl:main"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"

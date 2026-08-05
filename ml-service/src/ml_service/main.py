@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from src.database import init_db
-from src.routers.db_routes import db_router
-from src.routers.prompt_routes import prompt_router
+from ml_service.database import init_db
+from ml_service.routers.db_routes import db_router
+from ml_service.routers.prompt_routes import prompt_router
 
 app = FastAPI()
 app.include_router(db_router)

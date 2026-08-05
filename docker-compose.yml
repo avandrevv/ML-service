@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   app:
-    build: .
-    image: ghcr.io/avandrevv/ml-service:v2.1
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -18,7 +19,7 @@ services:
     env_file:
       - .env 
     healthcheck:
-      test: ["CMD", "python", "my_tests/healthcheck.py"]
+      test: ["CMD", "python", "tests/healthcheck.py"]
       interval: 10s
       timeout: 5s
       retries: 5

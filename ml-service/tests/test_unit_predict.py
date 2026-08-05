@@ -5,7 +5,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from fastapi.testclient import TestClient
 
-from src.main import app
+from ml_service.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
 

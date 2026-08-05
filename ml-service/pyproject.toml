@@ -1,0 +1,27 @@
+[project]
+name = "ml-service"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Andrew", email = "andrej.a.vanin@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi==0.115.12",
+    "httpx==0.28.1",
+    "joblib==1.4.2",
+    "numpy==1.26.4",
+    "psycopg2-binary==2.9.10",
+    "pytest==8.3.4",
+    "python-dotenv==1.0.1",
+    "scikit-learn==1.5.2",
+    "uvicorn[standard]==0.34.0",
+]
+
+[project.scripts]
+ml-service = "ml_service:main"
+
+[build-system]
+requires = ["uv_build>=0.12.1,<0.13.0"]
+build-backend = "uv_build"

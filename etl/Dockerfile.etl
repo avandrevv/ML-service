@@ -2,9 +2,15 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml uv.lock README.md ./
+RUN mkdir -p src/etl && touch src/etl/__init__.py
 
-COPY etl_service.py .
+RUN --mount=type=cache,target=/root/.cache/uv \
+    pip install uv && \
+    uv sync --frozen --no-dev
 
-CMD ["python", "etl_service.py"]
+COPY src/etl/ ./src/etl/
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+CMD ["python", "src/etl/etl_service.py"]
