@@ -13,7 +13,6 @@ dependencies = [
     "joblib==1.4.2",
     "numpy==1.26.4",
     "psycopg2-binary==2.9.10",
-    "pytest==8.3.4",
     "python-dotenv==1.0.1",
     "scikit-learn==1.5.2",
     "uvicorn[standard]==0.34.0",
@@ -26,7 +25,9 @@ ml-service = "ml_service:main"
 requires = ["uv_build>=0.12.1,<0.13.0"]
 build-backend = "uv_build"
 
-[tool.uv.dev-dependencies]
-ruff = "0.16.1"
-bandit = "1.9.4"
-pytest = "9.1.1"
+[dependency-groups]
+dev = [
+    "ruff==0.16.1",
+    "bandit==1.9.4",
+    "pytest==9.1.1",
+]
