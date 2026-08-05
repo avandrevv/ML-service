@@ -30,20 +30,27 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - name: Install uv, ruff, bandit and pytest
+      - name: Install uv and sync dependencies
         run: |
           python -m pip install uv ruff bandit pytest
           cd ml-service && uv sync --dev
           cd ../etl && uv sync --dev
+
       - name: Lint with ruff
-        run: ruff check ml-service/src etl/src --output-format=github
+        run: |
+          cd ml-service && uv run ruff check src
+          cd ../etl && uv run ruff check src
+
       - name: Security check with bandit
-        run: bandit -r ml-service/src etl/src -x ./ml-service/tests,./etl/tests,./.venv -f json -o bandit-report.json || true
+        run: |
+          uv run bandit -r ml-service/src etl/src -x ml-service/tests,etl/tests,ml-service/.venv,etl/.venv -f json -o bandit-report.json || true
+
       - name: Upload bandit report
         uses: actions/upload-artifact@v4
         with:
           name: bandit-report
           path: bandit-report.json
+
       - name: Test with pytest
         env:
           DB_HOST: localhost
@@ -51,7 +58,8 @@ jobs:
           PGPASSWORD: 1234
           DB_NAME: predict_logs_db
           OLLAMA_HOST: localhost:11434
-        run: pytest ml-service/tests/ -v
+        run: |
+          cd ml-service && uv run pytest tests/ -v
 
   build:
     needs: test
