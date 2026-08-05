@@ -38,8 +38,7 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          cd ml-service && uv run ruff check src
-          cd ../etl && uv run ruff check src
+          uv run ruff check ml-service/src etl/src
 
       - name: Security check with bandit
         run: |
