@@ -30,9 +30,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      - name: Install uv and dependencies
+      - name: Install uv, ruff and bandit
         run: |
-          python -m pip install uv
+          python -m pip install uv ruff bandit
           cd ml-service && uv sync --dev
           cd ../etl && uv sync --dev
       - name: Lint with ruff
@@ -78,7 +78,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/avandrevv/ml-service:${{ steps.vars.outputs.sha_short }}
-            ghcr.io/avandrevv/ml-service:v3
+            ghcr.io/avandrevv/ml-service:v3.1
       - name: Build and push ETL Image
         uses: docker/build-push-action@v4
         with:
