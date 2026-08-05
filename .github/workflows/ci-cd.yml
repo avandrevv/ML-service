@@ -49,6 +49,11 @@ jobs:
         with:
           name: bandit-report
           path: bandit-report.json
+      
+      - name: Copy model files for tests
+        run: |
+          cp model.joblib ml-service/
+          cp scaler.joblib ml-service/
 
       - name: Test with pytest
         run: |
