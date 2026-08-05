@@ -14,7 +14,7 @@ class ETLService:
     def __init__(self):
         self.db_url = f"postgresql://postgres:{os.getenv('PGPASSWORD', 'postgres')}@db:5432/predict_logs_db"
         self.engine = create_engine(self.db_url)
-        self.interval = int(os.getenv("ETL_INTERVAL", '30'))
+        self.interval = int(os.getenv("ETL_INTERVAL", "30"))
 
     def extract_transform_load(self):
         """Основной ETL процесс"""

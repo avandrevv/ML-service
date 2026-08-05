@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-
 from ml_service.database import get_db_connection
 
 db_router = APIRouter()

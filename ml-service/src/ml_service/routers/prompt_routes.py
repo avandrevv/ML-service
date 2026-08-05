@@ -6,10 +6,9 @@ import numpy as np
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, Request
 from joblib import load
-from psycopg2.extras import Json
-
 from ml_service.database import get_db_connection
 from ml_service.schemas import GenerateRequest, PredictRequest, PredictResponse
+from psycopg2.extras import Json
 
 load_dotenv()
 
