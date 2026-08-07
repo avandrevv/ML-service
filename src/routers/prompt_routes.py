@@ -89,7 +89,6 @@ async def generate_text(request: GenerateRequest, req: Request):
 
             response.raise_for_status()
 
-            # Сохраняем только промпт (ответ не сохраняем)
             conn = get_db_connection()
             if conn:
                 try:
