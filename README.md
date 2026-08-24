@@ -147,7 +147,7 @@ GitHub Actions автоматически:
 
 ## Архитектура сервиса
 
-```
+```mermaid
 graph LR
     A[Клиент] --> B[FastAPI]
     B --> C["/health"]
