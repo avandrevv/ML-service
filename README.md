@@ -1,4 +1,4 @@
-# ML Service v2# 
+# ML Service v2
 
 Версия **v2** сервиса машинного обучения на **FastAPI** с поддержкой:
 - **ETL-сервиса** для автоматического сбора ежедневной статистики.
@@ -8,9 +8,9 @@
 
 ---
 
-## Установка и запуск## 
+## Установка и запуск
 
-### Через Docker Compose (рекомендуемый способ)### 
+### Через Docker Compose (рекомендуемый способ)
 
 ```
 docker-compose up --build
@@ -18,7 +18,7 @@ docker-compose up --build
 
 Сервис будет доступен по адресу: `http://localhost:8000`
 
-### Локальный запуск (без Docker)### 
+### Локальный запуск (без Docker)
 
 1. Установите зависимости:
 ```
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 python -m uvicorn src.main:app --reload
 ```
 
-### Запуск готового образа из GitHub Container Registry### 
+### Запуск готового образа из GitHub Container Registry
 
 ```
 docker pull ghcr.io/avandrevv/ml-service:latest
@@ -41,7 +41,7 @@ docker run -p 8000:8000 ghcr.io/avandrevv/ml-service:latest
 
 ---
 
-## Переменные окружения## 
+## Переменные окружения
 
 Создайте файл `.env` в корне проекта:
 
@@ -51,7 +51,7 @@ PGPASSWORD=your_password
 
 ---
 
-## Эндпоинты API## 
+## Эндпоинты API
 
 | Метод | Путь | Описание |
 |-------|------|----------|
@@ -62,7 +62,7 @@ PGPASSWORD=your_password
 | `GET` | `/prompts` | Получение истории prompt-запросов |
 | `GET` | `/stats` | Статистика использования (ETL) |
 
-### Примеры запросов### 
+### Примеры запросов
 
 **/predict**
 
@@ -103,7 +103,7 @@ PGPASSWORD=your_password
 
 ---
 
-## Тестирование## 
+## Тестирование
 
 ```
 docker-compose exec app pytest my_tests/ -v
@@ -111,7 +111,7 @@ docker-compose exec app pytest my_tests/ -v
 
 ---
 
-## CI/CD## 
+## CI/CD
 
 GitHub Actions автоматически:
 - Запускает тесты при каждом пуше в ветку `master`.
@@ -119,7 +119,7 @@ GitHub Actions автоматически:
 
 ---
 
-## Структура проекта## 
+## Структура проекта
 
 ```
 .
@@ -145,7 +145,7 @@ GitHub Actions автоматически:
 
 ---
 
-## Архитектура сервиса## 
+## Архитектура сервиса
 
 ```
 graph LR
@@ -166,7 +166,7 @@ graph LR
 
 ---
 
-## Отличия от v1## 
+## Отличия от v1
 
 - **Добавлен ETL-сервис** — автоматически собирает ежедневную статистику использования.
 - **Новые эндпоинты** — `/prompts` и `/stats`.
