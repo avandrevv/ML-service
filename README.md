@@ -1,15 +1,14 @@
 # ML Service v3
 
 Версия **v3** сервиса машинного обучения на **FastAPI** с поддержкой:
-- **Микросервисной архитектуры** — выделенный **ml-service**.
-- **Современного стека** — **uv** и **pyproject.toml** вместо `requirements.txt`.
-- **ETL-сервиса** для автоматического сбора ежедневной статистики.
+- **Микросервисной архитектуры** — два независимых сервиса: **ml-service** (основной) и **etl** (сбор статистики).
+- **Современного стека** — управление зависимостями через **uv** и `pyproject.toml` для каждого сервиса.
 - **Логирования запросов** в PostgreSQL.
 - **Генерации текста** через Ollama.
 
 ---
 
-## Установка и запуск
+## Установка и запуск 
 
 ### Через Docker Compose (рекомендуемый способ)
 
@@ -26,14 +25,26 @@ docker-compose up --build
 pip install uv
 ```
 
-2. Установите зависимости:
+2. Перейдите в директорию `ml-service`:
+```
+cd ml-service
+```
+
+3. Установите зависимости:
 ```
 uv sync
 ```
 
-3. Запустите сервер:
+4. Запустите сервер:
 ```
 uv run uvicorn src.ml_service.main:app --reload
+```
+
+Для запуска ETL-сервиса отдельно:
+```
+cd etl
+uv sync
+uv run python src/etl/etl_service.py
 ```
 
 ### Запуск готового образа из GitHub Container Registry
@@ -49,7 +60,7 @@ docker run -p 8000:8000 ghcr.io/avandrevv/ml-service:latest
 
 ## Переменные окружения
 
-Создайте файл `.env` в корне проекта:
+Создайте файл `.env` в корне проекта (или в каждой директории сервиса):
 
 ```
 PGPASSWORD=your_password
@@ -111,8 +122,16 @@ PGPASSWORD=your_password
 
 ## Тестирование
 
+Для `ml-service`:
 ```
-docker-compose exec app pytest tests/ -v
+cd ml-service
+uv run pytest tests/ -v
+```
+
+Для `etl` (если есть тесты):
+```
+cd etl
+uv run pytest tests/ -v
 ```
 
 ---
@@ -129,27 +148,41 @@ GitHub Actions автоматически:
 
 ```
 .
-├── ml-service/
-│   └── src/
-│       └── ml_service/
-│           ├── __init__.py
-│           ├── main.py                 # Точка входа FastAPI
-│           ├── database.py             # Подключение к БД
-│           └── routers/
-│               ├── db_routes.py        # Эндпоинты /logs, /prompts, /stats
-│               └── prompt_routes.py    # Эндпоинты /predict, /generate
-├── etl/
-│   ├── Dockerfile.etl                  # Сборка ETL-сервиса
-│   ├── etl_service.py                  # Логика сбора статистики
-│   └── requirements.txt                # Зависимости ETL
-├── tests/                              # Тесты
-├── model.joblib                        # Обученная модель
-├── scaler.joblib                       # Scaler для предобработки
-├── Dockerfile                          # Многостадийная сборка с BuildKit
-├── Dockerfile.ollama                   # Сборка Ollama
-├── docker-compose.yml                  # Оркестрация всех сервисов
-├── pyproject.toml                      # Современное управление зависимостями
-├── uv.lock                             # Lock-файл uv
+├── ml-service/                        # Основной FastAPI-сервис
+│   ├── src/
+│   │   └── ml_service/                # Пакет приложения
+│   │       ├── __init__.py
+│   │       ├── main.py                # Точка входа
+│   │       ├── database.py            # Подключение к БД
+│   │       ├── schemas.py             # Pydantic-схемы
+│   │       ├── urls.py                # Настройка роутинга
+│   │       └── routers/
+│   │           ├── db_routes.py       # /logs, /prompts, /stats
+│   │           └── prompt_routes.py   # /predict, /generate
+│   ├── tests/                         # Тесты
+│   │   ├── healthcheck.py
+│   │   ├── test_unit_generate.py
+│   │   ├── test_unit_health.py
+│   │   ├── test_unit_logs.py
+│   │   └── test_unit_predict.py
+│   ├── Dockerfile                     # Сборка сервиса
+│   ├── pyproject.toml                 # Зависимости (uv)
+│   ├── uv.lock
+│   └── requirements.txt
+├── etl/                               # ETL-сервис для сбора статистики
+│   ├── src/
+│   │   └── etl/
+│   │       ├── __init__.py
+│   │       └── etl_service.py
+│   ├── Dockerfile.etl
+│   ├── pyproject.toml
+│   ├── uv.lock
+│   └── requirements.txt
+├── .github/workflows/                 # CI/CD пайплайны
+├── model.joblib                       # Обученная модель
+├── scaler.joblib                      # Scaler для предобработки
+├── Dockerfile.ollama                  # Сборка Ollama
+├── docker-compose.yml                 # Оркестрация всех сервисов
 └── README.md
 ```
 
@@ -159,7 +192,7 @@ GitHub Actions автоматически:
 
 ```mermaid
 graph LR
-    A[Клиент] --> B[FastAPI]
+    A[Клиент] --> B[FastAPI (ml-service)]
     B --> C["/health"]
     B --> D["/predict"]
     B --> E["/generate"]
@@ -172,18 +205,15 @@ graph LR
     H --> I
     E --> J[Ollama API]
     K[ETL-сервис] --> I
-    L[pytest + Mocking] --> B
-    M[GitHub Actions] --> L
-    M --> N[Сборка Docker]
-    N --> O[Образ ml-service]
 ```
 
 ---
 
 ## Отличия от v2
 
-- **Микросервисная архитектура** — выделенный `ml-service` с пакетной структурой `src/ml_service/`.
-- **Современный стек** — управление зависимостями через **uv** и `pyproject.toml` (вместо `requirements.txt`).
-- **Улучшенная сборка Docker** — использование BuildKit для оптимизации кеширования.
-- **Новая структура тестов** — тесты перенесены в папку `tests/` (вместо `my_tests/`).
+- **Два независимых сервиса** — `ml-service` и `etl` разделены на уровне кода (каждый со своим `pyproject.toml`).
+- **Современный стек** — управление зависимостями через **uv** и `pyproject.toml`.
+- **Пакетная структура** — исходники лежат в `src/ml_service/` и `src/etl/`.
+- **Тесты в отдельной папке** — `tests/` внутри `ml-service`.
 - **Актуальные версии зависимостей** — фиксированные через `uv.lock`.
+- **Docker-сборка с BuildKit** — оптимизированное кеширование.
