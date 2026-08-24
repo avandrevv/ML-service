@@ -1,57 +1,80 @@
-# ML Service
+# ML Service v2# 
 
-FastAPI сервис для предсказаний с логированием запросов в PostgreSQL.
+Версия **v2** сервиса машинного обучения на **FastAPI** с поддержкой:
+- **ETL-сервиса** для автоматического сбора ежедневной статистики.
+- **Логирования запросов** в PostgreSQL.
+- **Генерации текста** через Ollama.
+- **Модульной архитектуры** с выделенными роутерами.
 
-## Установка и запуск
+---
 
-### Через Docker Compose
+## Установка и запуск## 
 
+### Через Docker Compose (рекомендуемый способ)### 
 
-```bash
+```
 docker-compose up --build
 ```
 
-### Локально
-```bash
+Сервис будет доступен по адресу: `http://localhost:8000`
+
+### Локальный запуск (без Docker)### 
+
+1. Установите зависимости:
+```
 pip install -r requirements.txt
-python -m uvicorn app.app:app --reload
 ```
 
+2. Запустите сервер:
+```
+python -m uvicorn src.main:app --reload
+```
 
-## Запуск готового Docker-образа из реестра
+### Запуск готового образа из GitHub Container Registry### 
 
-```bash
+```
 docker pull ghcr.io/avandrevv/ml-service:latest
 docker run -p 8000:8000 ghcr.io/avandrevv/ml-service:latest
 ```
 
-Для успешного поднятия образа из реестра требуется **запущенный PostgreSQL**. 
-При локальном поднятии сервера FastAPI может рабоать без логирования (без БД).
-При запуске docker-compose запуск БД не требуется.
+> **Важно:** при запуске образа вручную требуется **запущенный PostgreSQL**. При локальном запуске FastAPI может работать без БД (логирование будет отключено).
 
-## Переменные окружения
-Необходим файл `.env` со следующим содержимым:
-```env
+---
+
+## Переменные окружения## 
+
+Создайте файл `.env` в корне проекта:
+
+```
 PGPASSWORD=your_password
 ```
 
-## Эндпоинты
+---
+
+## Эндпоинты API## 
+
 | Метод | Путь | Описание |
 |-------|------|----------|
-| GET | `/health` | Проверка статуса сервиса |
-| POST | `/predict` | Предсказание по признакам |
-| POST | `/generate` | Генерация текста через сервис Ollama |
-| GET | `/logs` | Последние 10 записей логов |
+| `GET` | `/health` | Проверка статуса сервиса |
+| `POST` | `/predict` | Предсказание по входным признакам |
+| `POST` | `/generate` | Генерация текста через Ollama |
+| `GET` | `/logs` | Последние 10 записей логов |
+| `GET` | `/prompts` | Получение истории prompt-запросов |
+| `GET` | `/stats` | Статистика использования (ETL) |
 
-### Пример запроса `/predict`
-```json
+### Примеры запросов### 
+
+**/predict**
+
+```
 {
   "features": [5.1, 3.5, 1.4, 0.2]
 }
 ```
 
-### Пример ответа `/predict`
-```json
+Ответ:
+
+```
 {
   "prediction": 0,
   "confidence": 0.95,
@@ -59,18 +82,18 @@ PGPASSWORD=your_password
 }
 ```
 
+**/generate**
 
-### Пример запроса `/generate`
-```json
+```
 {
-  "prompt": "Hi, im andrew and how is your name",
+  "prompt": "Hi, I'm Andrew and how is your name",
   "model": "tinyllama"
 }
 ```
 
+Ответ:
 
-### Пример ответа `/generate`
-```json
+```
 {
   "model": "tinyllama",
   "response": "Hello Andrew! I am an AI assistant.",
@@ -78,43 +101,75 @@ PGPASSWORD=your_password
 }
 ```
 
-## Тесты
-```bash
+---
+
+## Тестирование## 
+
+```
 docker-compose exec app pytest my_tests/ -v
 ```
 
-## CI/CD
-GitHub Actions запускает тесты и сборку Docker при каждом пуше в ветку `master`.
+---
 
-## Структура проекта
+## CI/CD## 
+
+GitHub Actions автоматически:
+- Запускает тесты при каждом пуше в ветку `master`.
+- Собирает Docker-образ и публикует его в GitHub Container Registry.
+
+---
+
+## Структура проекта## 
+
 ```
 .
-├── app/
-│   ├── app.py
-│   └── schemas.py
-├── my_tests/
-├── model.joblib
-├── scaler.joblib
-├── requirements.txt
-├── Dockerfile
-├── Dockerfile.ollama
-├── docker-compose.yml
+├── src/
+│   ├── main.py                 # Точка входа FastAPI
+│   ├── database.py             # Подключение к БД
+│   └── routers/
+│       ├── db_routes.py        # Эндпоинты /logs, /prompts, /stats
+│       └── prompt_routes.py    # Эндпоинты /predict, /generate
+├── etl/
+│   ├── Dockerfile.etl          # Сборка ETL-сервиса
+│   ├── etl_service.py          # Логика сбора статистики
+│   └── requirements.txt        # Зависимости ETL
+├── my_tests/                   # Тесты
+├── model.joblib                # Обученная модель
+├── scaler.joblib               # Scaler для предобработки
+├── Dockerfile                  # Многостадийная сборка основного сервиса
+├── Dockerfile.ollama           # Сборка Ollama
+├── docker-compose.yml          # Оркестрация всех сервисов
+├── requirements.txt            # Зависимости основного сервиса
 └── README.md
 ```
 
-## Упрощённая визуализация архитектуры сервиса
-```mermaid
+---
+
+## Архитектура сервиса## 
+
+```
 graph LR
     A[Клиент] --> B[FastAPI]
     B --> C["/health"]
     B --> D["/predict"]
     B --> E["/generate"]
     B --> F["/logs"]
-    D --> G[(PostgreSQL)]
-    F <--> G
-    E --> H[Ollama API]
-    I[pytest + Mocking] --> B
-    J[GitHub Actions] --> I
-    J --> K[Сборка Docker]
-    K --> L[Образ ml-service]
+    B --> G["/prompts"]
+    B --> H["/stats"]
+    D --> I[(PostgreSQL)]
+    F --> I
+    G --> I
+    H --> I
+    E --> J[Ollama API]
+    K[ETL-сервис] --> I
 ```
+
+---
+
+## Отличия от v1## 
+
+- **Добавлен ETL-сервис** — автоматически собирает ежедневную статистику использования.
+- **Новые эндпоинты** — `/prompts` и `/stats`.
+- **Рефакторинг кода** — логика вынесена в модули `src/` и роутеры.
+- **Многостадийный Dockerfile** — уменьшен финальный размер образа.
+- **Healthcheck** — добавлен в `docker-compose.yml` для проверки готовности сервиса.
