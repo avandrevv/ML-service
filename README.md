@@ -4,7 +4,7 @@
 - **ETL-сервиса** для автоматического сбора ежедневной статистики.
 - **Логирования запросов** в PostgreSQL.
 - **Генерации текста** через Ollama.
-- **Модульной архитектуры** с выделенными роутерами.
+- **Модульной архитектуры** — код вынесен в `src/` с роутерами.
 
 ---
 
@@ -28,6 +28,11 @@ pip install -r requirements.txt
 2. Запустите сервер:
 ```
 python -m uvicorn src.main:app --reload
+```
+
+Для запуска ETL-сервиса отдельно:
+```
+python etl/etl_service.py
 ```
 
 ### Запуск готового образа из GitHub Container Registry
@@ -103,10 +108,15 @@ PGPASSWORD=your_password
 
 ---
 
-## Тестирование
+## Тестирование 
 
 ```
 docker-compose exec app pytest my_tests/ -v
+```
+
+Или локально:
+```
+pytest my_tests/ -v
 ```
 
 ---
@@ -123,39 +133,47 @@ GitHub Actions автоматически:
 
 ```
 .
-├── src/
-│   ├── main.py                 # Точка входа FastAPI
-│   ├── database.py             # Подключение к БД
+├── src/                              # Основной код приложения
+│   ├── main.py                       # Точка входа FastAPI
+│   ├── database.py                   # Подключение к БД
+│   ├── schemas.py                    # Pydantic-схемы
+│   ├── urls.py                       # Настройка роутинга
 │   └── routers/
-│       ├── db_routes.py        # Эндпоинты /logs, /prompts, /stats
-│       └── prompt_routes.py    # Эндпоинты /predict, /generate
-├── etl/
-│   ├── Dockerfile.etl          # Сборка ETL-сервиса
-│   ├── etl_service.py          # Логика сбора статистики
-│   └── requirements.txt        # Зависимости ETL
-├── my_tests/                   # Тесты
-├── model.joblib                # Обученная модель
-├── scaler.joblib               # Scaler для предобработки
-├── Dockerfile                  # Многостадийная сборка основного сервиса
-├── Dockerfile.ollama           # Сборка Ollama
-├── docker-compose.yml          # Оркестрация всех сервисов
-├── requirements.txt            # Зависимости основного сервиса
+│       ├── db_routes.py              # /logs, /prompts, /stats
+│       └── prompt_routes.py          # /predict, /generate
+├── etl/                              # ETL-сервис
+│   ├── etl_service.py                # Логика сбора статистики
+│   ├── Dockerfile.etl                # Сборка ETL
+│   └── requirements.txt              # Зависимости ETL
+├── my_tests/                         # Тесты
+│   ├── healthcheck.py
+│   ├── test_unit_generate.py
+│   ├── test_unit_health.py
+│   ├── test_unit_logs.py
+│   └── test_unit_predict.py
+├── ml-service/                       # Заготовка под микросервис (не используется)
+│   ├── src/                          # (пусто)
+│   └── tests/                        # (только кеши)
+├── model.joblib                      # Обученная модель
+├── scaler.joblib                     # Scaler для предобработки
+├── Dockerfile                        # Многостадийная сборка
+├── Dockerfile.ollama                 # Сборка Ollama
+├── docker-compose.yml                # Оркестрация всех сервисов
+├── requirements.txt                  # Зависимости
 └── README.md
 ```
-
----
 
 ## Архитектура сервиса
 
 ```mermaid
 graph LR
     A[Клиент] --> B[FastAPI]
-    B --> C["/health"]
-    B --> D["/predict"]
-    B --> E["/generate"]
-    B --> F["/logs"]
-    B --> G["/prompts"]
-    B --> H["/stats"]
+    B --> C[/health/]
+    B --> D[/predict/]
+    B --> E[/generate/]
+    B --> F[/logs/]
+    B --> G[/prompts/]
+    B --> H[/stats/]
     D --> I[(PostgreSQL)]
     F --> I
     G --> I
@@ -172,4 +190,4 @@ graph LR
 - **Новые эндпоинты** — `/prompts` и `/stats`.
 - **Рефакторинг кода** — логика вынесена в модули `src/` и роутеры.
 - **Многостадийный Dockerfile** — уменьшен финальный размер образа.
-- **Healthcheck** — добавлен в `docker-compose.yml` для проверки готовности сервиса.
+- **Healthcheck** — добавлен в `docker-compose.yml` для проверки готовности.
