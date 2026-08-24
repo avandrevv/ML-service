@@ -192,13 +192,13 @@ GitHub Actions автоматически:
 
 ```mermaid
 graph LR
-    A[Клиент] --> B[FastAPI (ml-service)]
-    B --> C["/health"]
-    B --> D["/predict"]
-    B --> E["/generate"]
-    B --> F["/logs"]
-    B --> G["/prompts"]
-    B --> H["/stats"]
+    A[Клиент] --> B[FastAPI ml-service]
+    B --> C[/health/]
+    B --> D[/predict/]
+    B --> E[/generate/]
+    B --> F[/logs/]
+    B --> G[/prompts/]
+    B --> H[/stats/]
     D --> I[(PostgreSQL)]
     F --> I
     G --> I
