@@ -1,14 +1,16 @@
 import os
 import time
+from pathlib import Path
 
 import httpx
 import numpy as np
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException, Request
 from joblib import load
+from psycopg2.extras import Json
+
 from ml_service.database import get_db_connection
 from ml_service.schemas import GenerateRequest, PredictRequest, PredictResponse
-from psycopg2.extras import Json
 
 load_dotenv()
 
@@ -18,8 +20,12 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost:11434")
 OLLAMA_GENERATE_URL = f"http://{OLLAMA_HOST}/api/generate"
 OLLAMA_PULL_URL = f"http://{OLLAMA_HOST}/api/pull"
 
-model = load("model.joblib")
-scaler = load("scaler.joblib")
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
+MODEL_PATH = PROJECT_ROOT / "model.joblib"
+SCALER_PATH = PROJECT_ROOT / "scaler.joblib"
+
+model = load(MODEL_PATH)
+scaler = load(SCALER_PATH)
 
 
 @prompt_router.post("/predict", response_model=PredictResponse)

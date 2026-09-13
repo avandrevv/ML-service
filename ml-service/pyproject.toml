@@ -30,4 +30,16 @@ dev = [
     "ruff==0.16.1",
     "bandit==1.9.4",
     "pytest==9.1.1",
+    "pytest-cov>=7.1.0",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*"=["DTZ001"]
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report=term-missing"
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+omit = ["src/ml_service/urls.py"]
